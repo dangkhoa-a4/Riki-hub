@@ -1,0 +1,339 @@
+--// Riki Hub Full Auto Chest
+--// by realRiki
+
+repeat task.wait() until game:IsLoaded()
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local CollectionService = game:GetService("CollectionService")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+
+local plr = Players.LocalPlayer
+local playerGui = plr:WaitForChild("PlayerGui")
+
+-- Anti Duplicate
+if playerGui:FindFirstChild("RikiHubUi") then
+	playerGui.RikiHubUi:Destroy()
+end
+
+-- Variables
+getgenv().AutoChest = false
+
+local TweenSpeed = 350
+local AntiBanDelayMin = 20
+local AntiBanDelayMax = 40
+local MaxDistance = 3000
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "RikiHubUi"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = playerGui
+
+-- Main
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0,0,0,0)
+main.Position = UDim2.new(0.5,-160,0.5,-95)
+main.BackgroundColor3 = Color3.fromRGB(18,18,18)
+main.BackgroundTransparency = 0.08
+main.BorderSizePixel = 0
+main.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0,15)
+corner.Parent = main
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(255,170,0)
+stroke.Thickness = 1.5
+stroke.Parent = main
+
+TweenService:Create(
+	main,
+	TweenInfo.new(0.35,Enum.EasingStyle.Back),
+	{
+		Size = UDim2.new(0,320,0,190)
+	}
+):Play()
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,40)
+title.BackgroundTransparency = 1
+title.Text = "RikiHub"
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+title.TextColor3 = Color3.fromRGB(255,220,70)
+title.Parent = main
+
+-- Toggle
+local toggle = Instance.new("TextButton")
+toggle.Size = UDim2.new(0,260,0,45)
+toggle.Position = UDim2.new(0.5,-130,0,60)
+toggle.BackgroundColor3 = Color3.fromRGB(35,35,35)
+toggle.Text = "Auto Chest : OFF"
+toggle.Font = Enum.Font.GothamBold
+toggle.TextScaled = true
+toggle.TextColor3 = Color3.fromRGB(255,255,255)
+toggle.Parent = main
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0,12)
+toggleCorner.Parent = toggle
+
+-- Status
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1,0,0,30)
+status.Position = UDim2.new(0,0,0,125)
+status.BackgroundTransparency = 1
+status.Text = "Waiting..."
+status.Font = Enum.Font.GothamSemibold
+status.TextScaled = true
+status.TextColor3 = Color3.fromRGB(255,210,90)
+status.Parent = main
+
+-- Open Button
+local open = Instance.new("TextButton")
+open.Size = UDim2.new(0,55,0,55)
+open.Position = UDim2.new(0,15,0.5,-25)
+open.BackgroundTransparency = 1
+open.Text = ""
+open.ClipsDescendants = true
+open.Parent = gui
+
+local openCorner = Instance.new("UICorner")
+openCorner.CornerRadius = UDim.new(1,0)
+openCorner.Parent = open
+
+local openStroke = Instance.new("UIStroke")
+openStroke.Color = Color3.fromRGB(255,170,0)
+openStroke.Thickness = 1.5
+openStroke.Parent = open
+
+-- Icon
+local icon = Instance.new("ImageButton")
+icon.Size = UDim2.new(1,0,1,0)
+icon.BackgroundTransparency = 1
+icon.ScaleType = Enum.ScaleType.Crop
+
+-- CHANGE IMAGE HERE
+icon.Image = "rbxassetid://79594031628108"
+
+icon.Parent = open
+
+TweenService:Create(
+	icon,
+	TweenInfo.new(
+		1,
+		Enum.EasingStyle.Sine,
+		Enum.EasingDirection.InOut,
+		-1,
+		true
+	),
+	{
+		ImageTransparency = 0.35
+	}
+):Play()
+
+-- Open / Close
+local opened = true
+
+open.MouseButton1Click:Connect(function()
+
+	opened = not opened
+
+	if opened then
+
+		main.Visible = true
+
+		TweenService:Create(
+			main,
+			TweenInfo.new(0.25,Enum.EasingStyle.Back),
+			{
+				Size = UDim2.new(0,320,0,190)
+			}
+		):Play()
+
+	else
+
+		local tween = TweenService:Create(
+			main,
+			TweenInfo.new(0.2),
+			{
+				Size = UDim2.new(0,0,0,0)
+			}
+		)
+
+		tween:Play()
+		tween.Completed:Wait()
+
+		main.Visible = false
+	end
+end)
+
+-- Drag
+local dragging = false
+local dragStart
+local startPos
+
+main.InputBegan:Connect(function(input)
+
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = main.Position
+	end
+end)
+
+UIS.InputChanged:Connect(function(input)
+
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+
+		local delta = input.Position - dragStart
+
+		main.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+UIS.InputEnded:Connect(function(input)
+
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+-- Toggle
+toggle.MouseButton1Click:Connect(function()
+
+	getgenv().AutoChest = not getgenv().AutoChest
+
+	if getgenv().AutoChest then
+
+		toggle.Text = "Auto Chest : ON"
+		toggle.BackgroundColor3 = Color3.fromRGB(60,170,60)
+
+	else
+
+		toggle.Text = "Auto Chest : OFF"
+		toggle.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	end
+end)
+
+-- Noclip
+RunService.Stepped:Connect(function()
+
+	if getgenv().AutoChest then
+
+		local char = plr.Character
+
+		if char then
+
+			for _,v in pairs(char:GetDescendants()) do
+
+				if v:IsA("BasePart") then
+					v.CanCollide = false
+				end
+			end
+		end
+	end
+end)
+
+-- Tween Function
+local function TweenTo(pos)
+
+	local char = plr.Character or plr.CharacterAdded:Wait()
+	local hrp = char:WaitForChild("HumanoidRootPart")
+
+	local points = {
+		Vector3.new(hrp.Position.X,50,hrp.Position.Z),
+		Vector3.new(pos.X,50,pos.Z),
+		pos + Vector3.new(0,5,0)
+	}
+
+	for _,point in ipairs(points) do
+
+		local distance = (hrp.Position - point).Magnitude
+
+		local tween = TweenService:Create(
+			hrp,
+			TweenInfo.new(distance / TweenSpeed, Enum.EasingStyle.Linear),
+			{
+				CFrame = CFrame.new(point)
+			}
+		)
+
+		pcall(function()
+			tween:Play()
+			tween.Completed:Wait()
+		end)
+	end
+end
+
+-- Auto Chest
+task.spawn(function()
+
+	while task.wait(0.3) do
+
+		if getgenv().AutoChest then
+
+			local char = plr.Character
+			local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+			if hrp then
+
+				local nearest
+				local distance = math.huge
+
+				for _,v in pairs(CollectionService:GetTagged("_ChestTagged")) do
+
+					if v
+					and v.Parent
+					and not v:GetAttribute("IsDisabled") then
+
+						local mag = (hrp.Position - v:GetPivot().Position).Magnitude
+
+						if mag < distance then
+							distance = mag
+							nearest = v
+						end
+					end
+				end
+
+				if nearest and distance < MaxDistance then
+
+					status.Text = "Collecting Chest..."
+
+					-- Anti Ban Delay
+					task.wait(
+						math.random(
+							AntiBanDelayMin,
+							AntiBanDelayMax
+						)/100
+					)
+
+					TweenTo(nearest:GetPivot().Position)
+
+					-- Anti Stuck
+					if hrp.Velocity.Magnitude < 1 then
+						hrp.CFrame = hrp.CFrame + Vector3.new(0,3,0)
+					end
+
+				else
+
+					status.Text = "No Chest Found"
+				end
+			end
+
+		else
+
+			status.Text = "Auto Chest Disabled"
+		end
+	end
+end)
